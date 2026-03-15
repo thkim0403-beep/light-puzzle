@@ -282,14 +282,28 @@ function tryGeneratePuzzle(
     };
   }
 
-  // 퍼즐 섞기
-  const scrambled = board.map(row =>
-    row.map(tile => {
-      if (tile.fixed || tile.type === 'empty' || tile.type === 'cross') return tile;
-      const rotations = 1 + Math.floor(Math.random() * 3);
-      return { ...tile, rotation: (tile.rotation + rotations) % 4 };
-    })
-  );
+  // 퍼즐 섞기 (직선은 홀수 회전만, 이미 풀린 상태 방지)
+  let scrambled: Tile[][];
+  let attempts = 0;
+  do {
+    scrambled = board.map(row =>
+      row.map(tile => {
+        if (tile.fixed || tile.type === 'empty' || tile.type === 'cross') return tile;
+        // 직선 파이프: 180° 회전은 동일 상태이므로 홀수(1 or 3)만 사용
+        const isStraight = tile.type === 'straight';
+        const rotations = isStraight
+          ? (Math.random() < 0.5 ? 1 : 3)
+          : 1 + Math.floor(Math.random() * 3);
+        return { ...tile, rotation: (tile.rotation + rotations) % 4 };
+      })
+    );
+    attempts++;
+    // 섞은 후 이미 풀린 상태인지 확인
+    const allCorrect = scrambled.every(row =>
+      row.every(t => t.fixed || t.type === 'empty' || t.type === 'cross' || t.rotation === t.correctRotation)
+    );
+    if (!allCorrect) break;
+  } while (attempts < 10);
 
   return scrambled;
 }

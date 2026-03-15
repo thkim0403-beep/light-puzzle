@@ -59,6 +59,7 @@ export default function App() {
               board={game.board}
               onRotate={game.rotateTile}
               clearAnimating={game.clearAnimating}
+              boardGenId={game.boardGenId}
             />
           </div>
 

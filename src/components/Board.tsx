@@ -7,9 +7,10 @@ interface BoardProps {
   board: TileType[][];
   onRotate: (row: number, col: number, reverse?: boolean) => void;
   clearAnimating: boolean;
+  boardGenId?: number;
 }
 
-export default function Board({ board, onRotate, clearAnimating }: BoardProps) {
+export default function Board({ board, onRotate, clearAnimating, boardGenId = 0 }: BoardProps) {
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function Board({ board, onRotate, clearAnimating }: BoardProps) {
         {board.map((row, r) =>
           row.map((tile, c) => (
             <TileComponent
-              key={`${r}-${c}`}
+              key={`${boardGenId}-${r}-${c}`}
               tile={tile}
               size={tileSize}
               onClick={() => onRotate(r, c)}

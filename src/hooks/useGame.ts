@@ -72,6 +72,7 @@ export function useGame() {
     catch { return 0; }
   });
   const [clearAnimating, setClearAnimating] = useState(false);
+  const [boardGenId, setBoardGenId] = useState(0);
 
   // Refs로 stale closure 방지
   const moveCountRef = useRef(moveCount);
@@ -136,10 +137,18 @@ export function useGame() {
     };
   }, []);
 
+  // 레벨 전환 시 진행 중 타이머 정리
+  const clearPendingTimers = useCallback(() => {
+    if (clearTimerRef.current) { clearTimeout(clearTimerRef.current); clearTimerRef.current = null; }
+    if (hintTimerRef.current) { clearTimeout(hintTimerRef.current); hintTimerRef.current = null; }
+  }, []);
+
   const startLevel = useCallback((level: number) => {
+    clearPendingTimers();
     const config = getLevelConfig(level);
     const newBoard = generatePuzzle(config);
     const powered = calculatePower(newBoard);
+    boardRef.current = powered; // 동기 업데이트
     setBoard(powered);
     setCurrentLevel(level);
     setMoveCount(0);
@@ -152,13 +161,16 @@ export function useGame() {
     setTimeRemaining(null);
     setUndoStack([]);
     setUsedHintThisLevel(false);
+    setBoardGenId(n => n + 1);
     setScreen('game');
-  }, []);
+  }, [clearPendingTimers]);
 
   const startInfinite = useCallback((diff: Difficulty) => {
+    clearPendingTimers();
     const config = getInfiniteConfig(diff);
     const newBoard = generatePuzzle(config);
     const powered = calculatePower(newBoard);
+    boardRef.current = powered;
     setBoard(powered);
     setDifficulty(diff);
     setMoveCount(0);
@@ -171,13 +183,16 @@ export function useGame() {
     setTimeRemaining(null);
     setUndoStack([]);
     setUsedHintThisLevel(false);
+    setBoardGenId(n => n + 1);
     setScreen('infinite');
   }, []);
 
   const startTimeAttack = useCallback((diff: Difficulty) => {
+    clearPendingTimers();
     const config = getInfiniteConfig(diff);
     const newBoard = generatePuzzle(config);
     const powered = calculatePower(newBoard);
+    boardRef.current = powered;
     setBoard(powered);
     setDifficulty(diff);
     setMoveCount(0);
@@ -191,6 +206,7 @@ export function useGame() {
     setTimeRemaining(limit);
     setUndoStack([]);
     setUsedHintThisLevel(false);
+    setBoardGenId(n => n + 1);
     setScreen('timeAttack');
   }, []);
 
@@ -307,6 +323,7 @@ export function useGame() {
     );
 
     const powered = calculatePower(newBoard);
+    boardRef.current = powered;
     setBoard(powered);
 
     setUndoStack(s => [...s.slice(-4), { row, col, prevRotation }]);
@@ -350,6 +367,7 @@ export function useGame() {
     );
 
     const powered = calculatePower(newBoard);
+    boardRef.current = powered;
     setBoard(powered);
 
     // 힌트 반짝임 효과 제거
@@ -388,7 +406,9 @@ export function useGame() {
           : t
       )
     );
-    setBoard(calculatePower(newBoard));
+    const undoPowered = calculatePower(newBoard);
+    boardRef.current = undoPowered;
+    setBoard(undoPowered);
     setMoveCount(m => Math.max(0, m - 1));
   }, [undoStack, isCleared, clearAnimating]);
 
@@ -422,6 +442,7 @@ export function useGame() {
   return {
     screen,
     setScreen,
+    boardGenId,
     currentLevel,
     board,
     moveCount,
