@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useGame } from './hooks/useGame';
 import Board from './components/Board';
 import Header from './components/Header';
@@ -5,10 +6,12 @@ import LevelInfo from './components/LevelInfo';
 import StartScreen from './components/StartScreen';
 import AchievementPopup from './components/AchievementPopup';
 import StarryBackground from './components/StarryBackground';
+import HowToPlay from './components/HowToPlay';
 import { calculateStars, countPipes } from './utils/boardLogic';
 
 export default function App() {
   const game = useGame();
+  const [showHelp, setShowHelp] = useState(false);
 
   const isGameScreen = game.screen === 'game' || (game.screen === 'infinite' && game.board.length > 0) || (game.screen === 'timeAttack' && game.board.length > 0);
 
@@ -19,6 +22,7 @@ export default function App() {
     <div className="min-h-screen font-[Jua] text-white overflow-hidden select-none" style={{ overscrollBehavior: 'none' }}>
       <StarryBackground isCleared={game.isCleared} />
       <AchievementPopup achievement={game.newAchievement} />
+      <HowToPlay open={showHelp} onClose={() => setShowHelp(false)} />
 
       {!isGameScreen && (
         <StartScreen
@@ -30,6 +34,7 @@ export default function App() {
           onStartInfinite={game.startInfinite}
           onStartTimeAttack={game.startTimeAttack}
           onSetScreen={game.setScreen}
+          onShowHelp={() => setShowHelp(true)}
         />
       )}
 

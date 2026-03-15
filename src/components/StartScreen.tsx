@@ -10,6 +10,7 @@ interface StartScreenProps {
   onStartInfinite: (diff: Difficulty) => void;
   onStartTimeAttack: (diff: Difficulty) => void;
   onSetScreen: (screen: GameScreen) => void;
+  onShowHelp: () => void;
 }
 
 function Stars({ count }: { count: number }) {
@@ -67,6 +68,7 @@ export default function StartScreen({
   onStartInfinite,
   onStartTimeAttack,
   onSetScreen,
+  onShowHelp,
 }: StartScreenProps) {
   // 시작 화면
   if (screen === 'start') {
@@ -133,13 +135,22 @@ export default function StartScreen({
             ⏱️ 타임 어택
           </motion.button>
 
-          <motion.button
-            onClick={() => onSetScreen('achievements')}
-            className="w-full py-3 rounded-2xl text-white/50 hover:text-white/80 text-sm transition-colors"
-            whileHover={{ scale: 1.02 }}
-          >
-            🏆 업적
-          </motion.button>
+          <div className="flex gap-3 w-full">
+            <motion.button
+              onClick={onShowHelp}
+              className="flex-1 py-3 rounded-2xl text-white/50 hover:text-white/80 text-sm transition-colors hover:bg-white/5"
+              whileHover={{ scale: 1.02 }}
+            >
+              📖 놀이 방법
+            </motion.button>
+            <motion.button
+              onClick={() => onSetScreen('achievements')}
+              className="flex-1 py-3 rounded-2xl text-white/50 hover:text-white/80 text-sm transition-colors hover:bg-white/5"
+              whileHover={{ scale: 1.02 }}
+            >
+              🏆 업적
+            </motion.button>
+          </div>
         </div>
       </div>
     );
