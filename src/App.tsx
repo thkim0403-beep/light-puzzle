@@ -29,7 +29,7 @@ export default function App() {
           screen={game.screen}
           progress={game.progress}
           achievements={game.achievements}
-          maxUnlockedLevel={game.getMaxUnlockedLevel()}
+          maxUnlockedLevel={game.maxUnlockedLevel}
           onStartLevel={game.startLevel}
           onStartInfinite={game.startInfinite}
           onStartTimeAttack={game.startTimeAttack}

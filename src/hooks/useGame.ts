@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { Tile, GameScreen, Difficulty, LevelProgress, Achievement } from '../types';
 import { generatePuzzle, getLevelConfig, getInfiniteConfig } from '../utils/puzzleGenerator';
 import { calculatePower, isAllBulbsPowered, calculateStars, countPipes } from '../utils/boardLogic';
@@ -64,23 +64,50 @@ export function useGame() {
   const [usedHintThisLevel, setUsedHintThisLevel] = useState(false);
   const [consecutiveClears, setConsecutiveClears] = useState(0);
   const [totalBulbsLit, setTotalBulbsLit] = useState(() => {
-    try {
-      return parseInt(localStorage.getItem('light-puzzle-bulbs') || '0');
-    } catch { return 0; }
+    try { return parseInt(localStorage.getItem('light-puzzle-bulbs') || '0'); }
+    catch { return 0; }
   });
   const [noHintLevels, setNoHintLevels] = useState(() => {
-    try {
-      return parseInt(localStorage.getItem('light-puzzle-nohint') || '0');
-    } catch { return 0; }
+    try { return parseInt(localStorage.getItem('light-puzzle-nohint') || '0'); }
+    catch { return 0; }
   });
   const [clearAnimating, setClearAnimating] = useState(false);
 
+  // Refs로 stale closure 방지
+  const moveCountRef = useRef(moveCount);
+  const elapsedTimeRef = useRef(elapsedTime);
+  const progressRef = useRef(progress);
+  const currentLevelRef = useRef(currentLevel);
+  const screenRef = useRef(screen);
+  const totalBulbsLitRef = useRef(totalBulbsLit);
+  const consecutiveClearsRef = useRef(consecutiveClears);
+  const noHintLevelsRef = useRef(noHintLevels);
+  const usedHintRef = useRef(usedHintThisLevel);
+  const achievementsRef = useRef(achievements);
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const boardRef = useRef(board);
+
+  // Ref 동기화
+  useEffect(() => { boardRef.current = board; }, [board]);
+  useEffect(() => { moveCountRef.current = moveCount; }, [moveCount]);
+  useEffect(() => { elapsedTimeRef.current = elapsedTime; }, [elapsedTime]);
+  useEffect(() => { progressRef.current = progress; }, [progress]);
+  useEffect(() => { currentLevelRef.current = currentLevel; }, [currentLevel]);
+  useEffect(() => { screenRef.current = screen; }, [screen]);
+  useEffect(() => { totalBulbsLitRef.current = totalBulbsLit; }, [totalBulbsLit]);
+  useEffect(() => { consecutiveClearsRef.current = consecutiveClears; }, [consecutiveClears]);
+  useEffect(() => { noHintLevelsRef.current = noHintLevels; }, [noHintLevels]);
+  useEffect(() => { usedHintRef.current = usedHintThisLevel; }, [usedHintThisLevel]);
+  useEffect(() => { achievementsRef.current = achievements; }, [achievements]);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 타이머
+  // 타이머 — clearAnimating 시에도 정지
   useEffect(() => {
     if (screen === 'game' || screen === 'infinite' || screen === 'timeAttack') {
-      if (!isCleared && !isTimeUp) {
+      if (!isCleared && !isTimeUp && !clearAnimating) {
         timerRef.current = setInterval(() => {
           setElapsedTime(t => t + 1);
           if (timeLimit !== null) {
@@ -99,7 +126,15 @@ export function useGame() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [screen, isCleared, isTimeUp, timeLimit]);
+  }, [screen, isCleared, isTimeUp, clearAnimating, timeLimit]);
+
+  // cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    };
+  }, []);
 
   const startLevel = useCallback((level: number) => {
     const config = getLevelConfig(level);
@@ -167,15 +202,16 @@ export function useGame() {
     noHint: number,
     consecutive: number,
   ) => {
-    const updated = [...achievements];
+    // 불변성 보장: 각 객체를 복제
+    const updated = achievementsRef.current.map(a => ({ ...a }));
     let newlyAchieved: Achievement | null = null;
 
     const check = (id: string, condition: boolean) => {
-      const a = updated.find(a => a.id === id);
+      const a = updated.find(x => x.id === id);
       if (a && !a.achieved && condition) {
         a.achieved = true;
         a.achievedDate = new Date().toISOString().split('T')[0];
-        newlyAchieved = a;
+        newlyAchieved = { ...a };
       }
     };
 
@@ -196,169 +232,165 @@ export function useGame() {
       setNewAchievement(newlyAchieved);
       setTimeout(() => setNewAchievement(null), 3000);
     }
-  }, [achievements]);
+  }, []);
+
+  // 클리어 처리 — setBoard 외부에서 실행
+  const handleClear = useCallback((poweredBoard: Tile[][]) => {
+    const pipeCount = countPipes(poweredBoard);
+    const newMoveCount = moveCountRef.current + 1;
+    const stars = calculateStars(newMoveCount, pipeCount);
+
+    // 전구 수 카운트
+    let bulbsInLevel = 0;
+    for (const r of poweredBoard) {
+      for (const t of r) {
+        if (t.type === 'bulb' && t.powered) bulbsInLevel++;
+      }
+    }
+    const newTotalBulbs = totalBulbsLitRef.current + bulbsInLevel;
+    setTotalBulbsLit(newTotalBulbs);
+    localStorage.setItem('light-puzzle-bulbs', String(newTotalBulbs));
+
+    const newConsecutive = consecutiveClearsRef.current + 1;
+    setConsecutiveClears(newConsecutive);
+
+    let newNoHint = noHintLevelsRef.current;
+    if (!usedHintRef.current) {
+      newNoHint++;
+      setNoHintLevels(newNoHint);
+      localStorage.setItem('light-puzzle-nohint', String(newNoHint));
+    }
+
+    // 진행 저장 (레벨 모드일 때만)
+    if (screenRef.current === 'game') {
+      const curLevel = currentLevelRef.current;
+      const newProgress = { ...progressRef.current };
+      const existing = newProgress[curLevel];
+      const curTime = elapsedTimeRef.current;
+      newProgress[curLevel] = {
+        cleared: true,
+        stars: Math.max(stars, existing?.stars || 0),
+        bestMoves: existing?.bestMoves ? Math.min(newMoveCount, existing.bestMoves) : newMoveCount,
+        bestTime: existing?.bestTime ? Math.min(curTime, existing.bestTime) : curTime,
+      };
+      setProgress(newProgress);
+      saveProgress(newProgress);
+
+      checkAchievements(newProgress, stars, curTime, newTotalBulbs, newNoHint, newConsecutive);
+    }
+
+    setClearAnimating(true);
+    clearTimerRef.current = setTimeout(() => {
+      setIsCleared(true);
+    }, 1500);
+  }, [checkAchievements]);
 
   const rotateTile = useCallback((row: number, col: number, reverse = false) => {
-    if (isCleared || isTimeUp) return;
+    if (isCleared || isTimeUp || clearAnimating) return;
 
-    setBoard(prev => {
-      const tile = prev[row][col];
-      if (!tile || tile.type === 'empty' || tile.type === 'battery' || tile.type === 'bulb' || tile.type === 'cross') return prev;
-      if (tile.fixed || tile.type === 'locked') return prev;
+    const prev = boardRef.current;
+    const tile = prev[row]?.[col];
+    if (!tile || tile.type === 'empty' || tile.type === 'battery' || tile.type === 'bulb' || tile.type === 'cross') return;
+    if (tile.fixed || tile.type === 'locked') return;
 
-      const prevRotation = tile.rotation;
-      const newRotation = reverse
-        ? (tile.rotation + 3) % 4
-        : (tile.rotation + 1) % 4;
+    const prevRotation = tile.rotation;
+    const newRotation = reverse
+      ? (tile.rotation + 3) % 4
+      : (tile.rotation + 1) % 4;
 
-      const newBoard = prev.map(r =>
-        r.map(t =>
-          t.row === row && t.col === col
-            ? { ...t, rotation: newRotation }
-            : t
-        )
-      );
+    const newBoard = prev.map(r =>
+      r.map(t =>
+        t.row === row && t.col === col
+          ? { ...t, rotation: newRotation }
+          : t
+      )
+    );
 
-      const powered = calculatePower(newBoard);
+    const powered = calculatePower(newBoard);
+    setBoard(powered);
 
-      // 클리어 체크
-      if (isAllBulbsPowered(powered)) {
-        const pipeCount = countPipes(powered);
-        const newMoveCount = moveCount + 1;
-        const stars = calculateStars(newMoveCount, pipeCount);
+    setUndoStack(s => [...s.slice(-4), { row, col, prevRotation }]);
+    setMoveCount(m => m + 1);
 
-        // 전구 수 카운트
-        let bulbsInLevel = 0;
-        for (const r of powered) {
-          for (const t of r) {
-            if (t.type === 'bulb' && t.powered) bulbsInLevel++;
-          }
-        }
-        const newTotalBulbs = totalBulbsLit + bulbsInLevel;
-        setTotalBulbsLit(newTotalBulbs);
-        localStorage.setItem('light-puzzle-bulbs', String(newTotalBulbs));
-
-        const newConsecutive = consecutiveClears + 1;
-        setConsecutiveClears(newConsecutive);
-
-        let newNoHint = noHintLevels;
-        if (!usedHintThisLevel) {
-          newNoHint++;
-          setNoHintLevels(newNoHint);
-          localStorage.setItem('light-puzzle-nohint', String(newNoHint));
-        }
-
-        // 진행 저장 (레벨 모드일 때만)
-        if (screen === 'game') {
-          const newProgress = { ...progress };
-          const existing = newProgress[currentLevel];
-          newProgress[currentLevel] = {
-            cleared: true,
-            stars: Math.max(stars, existing?.stars || 0),
-            bestMoves: existing?.bestMoves ? Math.min(newMoveCount, existing.bestMoves) : newMoveCount,
-            bestTime: existing?.bestTime ? Math.min(elapsedTime, existing.bestTime) : elapsedTime,
-          };
-          setProgress(newProgress);
-          saveProgress(newProgress);
-
-          checkAchievements(newProgress, stars, elapsedTime, newTotalBulbs, newNoHint, newConsecutive);
-        }
-
-        setClearAnimating(true);
-        setTimeout(() => {
-          setIsCleared(true);
-        }, 1500);
-      }
-
-      // Undo 스택 업데이트
-      setUndoStack(prev => [...prev.slice(-4), { row, col, prevRotation }]);
-      setMoveCount(m => m + 1);
-
-      return powered;
-    });
-  }, [isCleared, isTimeUp, moveCount, progress, currentLevel, elapsedTime, screen, totalBulbsLit, consecutiveClears, noHintLevels, usedHintThisLevel, checkAchievements]);
+    if (isAllBulbsPowered(powered)) {
+      handleClear(powered);
+    }
+  }, [isCleared, isTimeUp, clearAnimating, handleClear]);
 
   const useHint = useCallback(() => {
-    if (hintsRemaining <= 0 || isCleared) return;
+    if (hintsRemaining <= 0 || isCleared || clearAnimating) return;
 
-    setBoard(prev => {
-      // 정답이 아닌 파이프 찾기
-      const wrongPipes: Tile[] = [];
-      for (const row of prev) {
-        for (const tile of row) {
-          if (
-            tile.correctRotation !== undefined &&
-            tile.rotation !== tile.correctRotation &&
-            !tile.fixed &&
-            tile.type !== 'empty' &&
-            tile.type !== 'battery' &&
-            tile.type !== 'bulb' &&
-            tile.type !== 'cross'
-          ) {
-            wrongPipes.push(tile);
-          }
+    const prev = boardRef.current;
+    const wrongPipes: Tile[] = [];
+    for (const row of prev) {
+      for (const tile of row) {
+        if (
+          tile.correctRotation !== undefined &&
+          tile.rotation !== tile.correctRotation &&
+          !tile.fixed &&
+          tile.type !== 'empty' &&
+          tile.type !== 'battery' &&
+          tile.type !== 'bulb' &&
+          tile.type !== 'cross'
+        ) {
+          wrongPipes.push(tile);
         }
       }
+    }
 
-      if (wrongPipes.length === 0) return prev;
+    if (wrongPipes.length === 0) return;
 
-      const target = wrongPipes[Math.floor(Math.random() * wrongPipes.length)];
-      const newBoard = prev.map(r =>
-        r.map(t =>
-          t.row === target.row && t.col === target.col
-            ? { ...t, rotation: t.correctRotation!, hinting: true }
-            : t
+    const target = wrongPipes[Math.floor(Math.random() * wrongPipes.length)];
+    const newBoard = prev.map(r =>
+      r.map(t =>
+        t.row === target.row && t.col === target.col
+          ? { ...t, rotation: t.correctRotation!, hinting: true }
+          : t
+      )
+    );
+
+    const powered = calculatePower(newBoard);
+    setBoard(powered);
+
+    // 힌트 반짝임 효과 제거
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => {
+      setBoard(b =>
+        b.map(r =>
+          r.map(t =>
+            t.row === target.row && t.col === target.col
+              ? { ...t, hinting: false }
+              : t
+          )
         )
       );
-
-      // 힌트 반짝임 효과 제거
-      setTimeout(() => {
-        setBoard(b =>
-          b.map(r =>
-            r.map(t =>
-              t.row === target.row && t.col === target.col
-                ? { ...t, hinting: false }
-                : t
-            )
-          )
-        );
-      }, 1000);
-
-      const powered = calculatePower(newBoard);
-
-      // 힌트 후 클리어 체크
-      if (isAllBulbsPowered(powered)) {
-        setClearAnimating(true);
-        setTimeout(() => setIsCleared(true), 1500);
-      }
-
-      return powered;
-    });
+    }, 1000);
 
     setHintsRemaining(h => h - 1);
     setUsedHintThisLevel(true);
-    setMoveCount(m => m + 1);
-  }, [hintsRemaining, isCleared]);
+
+    if (isAllBulbsPowered(powered)) {
+      handleClear(powered);
+    }
+  }, [hintsRemaining, isCleared, clearAnimating, handleClear]);
 
   const undo = useCallback(() => {
-    if (undoStack.length === 0 || isCleared) return;
+    if (undoStack.length === 0 || isCleared || clearAnimating) return;
 
     const last = undoStack[undoStack.length - 1];
     setUndoStack(prev => prev.slice(0, -1));
 
-    setBoard(prev => {
-      const newBoard = prev.map(r =>
-        r.map(t =>
-          t.row === last.row && t.col === last.col
-            ? { ...t, rotation: last.prevRotation }
-            : t
-        )
-      );
-      return calculatePower(newBoard);
-    });
-
+    const prev = boardRef.current;
+    const newBoard = prev.map(r =>
+      r.map(t =>
+        t.row === last.row && t.col === last.col
+          ? { ...t, rotation: last.prevRotation }
+          : t
+      )
+    );
+    setBoard(calculatePower(newBoard));
     setMoveCount(m => Math.max(0, m - 1));
-  }, [undoStack, isCleared]);
+  }, [undoStack, isCleared, clearAnimating]);
 
   const nextLevel = useCallback(() => {
     if (currentLevel < 30) {
@@ -369,6 +401,7 @@ export function useGame() {
   }, [currentLevel, startLevel]);
 
   const retry = useCallback(() => {
+    setConsecutiveClears(0); // 리트라이 시 연속 클리어 초기화
     if (screen === 'game') {
       startLevel(currentLevel);
     } else if (screen === 'infinite') {
@@ -378,7 +411,7 @@ export function useGame() {
     }
   }, [screen, currentLevel, difficulty, startLevel, startInfinite, startTimeAttack]);
 
-  const getMaxUnlockedLevel = useCallback(() => {
+  const maxUnlockedLevel = useMemo(() => {
     let max = 1;
     for (let i = 1; i <= 30; i++) {
       if (progress[i]?.cleared) max = i + 1;
@@ -412,6 +445,6 @@ export function useGame() {
     undo,
     nextLevel,
     retry,
-    getMaxUnlockedLevel,
+    maxUnlockedLevel,
   };
 }

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useRef, useEffect } from 'react';
 import type { Tile as TileType } from '../types';
 
 interface TileProps {
@@ -113,8 +114,24 @@ export default function Tile({ tile, size, onClick, onRightClick, clearAnimating
   const isPipe = ['straight', 'curve', 'tjunction', 'cross', 'locked', 'bidirectional'].includes(tile.type);
   const isClickable = isPipe && !tile.fixed && tile.type !== 'cross' && tile.type !== 'locked';
 
-  // 시각적 회전 각도 (rotation * 90도)
-  const rotationDeg = tile.rotation * 90;
+  // 누적 회전 각도 추적 (270→0 역방향 회전 방지)
+  const cumulativeRef = useRef(tile.rotation * 90);
+  const prevRotationRef = useRef(tile.rotation);
+
+  useEffect(() => {
+    const prev = prevRotationRef.current;
+    const curr = tile.rotation;
+    if (prev !== curr) {
+      // 시계방향 전환: 3→0 은 +90, 반시계: 0→3 은 -90
+      let diff = curr - prev;
+      if (diff === -3) diff = 1;   // 3→0: 시계방향 90
+      else if (diff === 3) diff = -1; // 0→3: 반시계 90
+      cumulativeRef.current += diff * 90;
+      prevRotationRef.current = curr;
+    }
+  }, [tile.rotation]);
+
+  const rotationDeg = cumulativeRef.current;
 
   return (
     <div

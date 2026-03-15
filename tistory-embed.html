@@ -1,14 +1,147 @@
-<div style="width:100%;max-width:600px;margin:0 auto;">
-  <iframe
-    src="https://thkim0403-beep.github.io/light-puzzle/"
-    width="100%"
-    height="700"
-    style="border:none;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);"
-    allowfullscreen
-    loading="lazy"
-    title="전구 켜기 퍼즐 게임">
-  </iframe>
-  <p style="text-align:center;font-size:13px;color:#888;margin-top:8px;">
-    💡 불을 켜라! — 파이프를 회전시켜 모든 전구에 불을 켜보세요
-  </p>
+<!-- 💡 불을 켜라! — 블로그 삽입용 HTML -->
+<!-- 티스토리 글 작성 → HTML 모드에서 아래 전체를 붙여넣으세요 -->
+
+<div style="max-width:680px;margin:0 auto;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;color:#333;line-height:1.8;">
+
+  <!-- 타이틀 -->
+  <div style="text-align:center;padding:32px 0 16px;">
+    <span style="font-size:48px;">💡</span>
+    <h2 style="font-size:28px;font-weight:800;margin:8px 0 4px;color:#1a1a2e;">불을 켜라! — 파이프 퍼즐 게임</h2>
+    <p style="font-size:15px;color:#888;margin:0;">파이프를 돌려 전구에 불을 켜는 두뇌 퍼즐 게임</p>
+  </div>
+
+  <!-- 게임 iframe -->
+  <div style="width:100%;max-width:600px;margin:0 auto 24px;">
+    <iframe
+      src="https://thkim0403-beep.github.io/light-puzzle/"
+      width="100%"
+      height="700"
+      style="border:none;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);"
+      allowfullscreen
+      loading="lazy"
+      title="전구 켜기 퍼즐 게임">
+    </iframe>
+    <p style="text-align:center;font-size:12px;color:#aaa;margin-top:6px;">
+      ↑ 위 화면에서 바로 플레이할 수 있어요!
+    </p>
+  </div>
+
+  <!-- 게임 소개 -->
+  <div style="background:#f8f9ff;border-radius:12px;padding:24px;margin-bottom:20px;">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 12px;color:#1a1a2e;">🎮 어떤 게임인가요?</h3>
+    <p style="font-size:14px;color:#555;margin:0;">
+      마을의 전기가 모두 나갔어요! 파이프를 올바른 방향으로 <b>회전</b>시켜서
+      <b>전원(⚡)</b>에서 <b>전구(💡)</b>까지 전기를 연결하는 퍼즐 게임이에요.
+      초등학생도 쉽게 즐길 수 있고, 레벨이 올라갈수록 점점 어려워져요!
+    </p>
+  </div>
+
+  <!-- 플레이 방법 -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:24px;margin-bottom:20px;">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 16px;color:#1a1a2e;">📖 플레이 방법</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <tr>
+        <td style="padding:8px 12px;vertical-align:top;width:36px;font-size:20px;">1️⃣</td>
+        <td style="padding:8px 0;color:#555;"><b>파이프를 터치(클릭)</b>하면 시계 방향으로 90도 회전해요</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;vertical-align:top;font-size:20px;">2️⃣</td>
+        <td style="padding:8px 0;color:#555;">파이프끼리 방향이 맞으면 <b style="color:#e6a800;">노란색</b>으로 연결돼요</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;vertical-align:top;font-size:20px;">3️⃣</td>
+        <td style="padding:8px 0;color:#555;">전원(⚡)에서 전구(💡)까지 <b>모두 연결하면 클리어!</b></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;vertical-align:top;font-size:20px;">⭐</td>
+        <td style="padding:8px 0;color:#555;">적은 횟수로 풀수록 별을 많이 받아요 (최대 ⭐⭐⭐)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 파이프 종류 -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:24px;margin-bottom:20px;">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 12px;color:#1a1a2e;">🔧 파이프 종류</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:#f4f4f8;border-radius:8px;padding:12px;text-align:center;">
+        <span style="font-size:28px;color:#666;">━</span><br>
+        <b style="font-size:13px;">직선</b><br>
+        <span style="font-size:11px;color:#999;">위↔아래 또는 좌↔우</span>
+      </div>
+      <div style="background:#f4f4f8;border-radius:8px;padding:12px;text-align:center;">
+        <span style="font-size:28px;color:#666;">┗</span><br>
+        <b style="font-size:13px;">곡선</b><br>
+        <span style="font-size:11px;color:#999;">L자로 꺾어서 연결</span>
+      </div>
+      <div style="background:#f4f4f8;border-radius:8px;padding:12px;text-align:center;">
+        <span style="font-size:28px;color:#666;">┣</span><br>
+        <b style="font-size:13px;">T자</b><br>
+        <span style="font-size:11px;color:#999;">세 방향으로 연결</span>
+      </div>
+      <div style="background:#f4f4f8;border-radius:8px;padding:12px;text-align:center;">
+        <span style="font-size:28px;color:#666;">╋</span><br>
+        <b style="font-size:13px;">십자</b><br>
+        <span style="font-size:11px;color:#999;">네 방향 모두 (회전 불필요)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 모드 -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:24px;margin-bottom:20px;">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 12px;color:#1a1a2e;">🕹️ 게임 모드</h3>
+    <ul style="margin:0;padding-left:20px;font-size:14px;color:#555;">
+      <li style="margin-bottom:8px;"><b>🎮 레벨 모드</b> — 1~30레벨을 순서대로 클리어! 뒤로 갈수록 보드가 커지고 전구도 늘어나요</li>
+      <li style="margin-bottom:8px;"><b>♾️ 무한 모드</b> — 난이도를 골라서 랜덤 퍼즐을 계속 플레이</li>
+      <li style="margin-bottom:8px;"><b>⏱️ 타임 어택</b> — 제한 시간 안에 풀어야 해요! (쉬움 60초 / 보통 45초 / 어려움 30초)</li>
+    </ul>
+  </div>
+
+  <!-- 꿀팁 -->
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:24px;margin-bottom:20px;">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 12px;color:#92400e;">✨ 꿀팁</h3>
+    <ul style="margin:0;padding-left:20px;font-size:14px;color:#78350f;">
+      <li style="margin-bottom:6px;">💡 <b>힌트</b> 버튼을 누르면 파이프 하나를 정답으로 돌려줘요 (레벨당 2회)</li>
+      <li style="margin-bottom:6px;">↩ 실수했다면 <b>되돌리기</b> 버튼으로 취소할 수 있어요</li>
+      <li style="margin-bottom:6px;">🔒 자물쇠가 달린 파이프는 이미 정답 방향이에요 — 이걸 기준으로 풀면 쉬워요!</li>
+      <li style="margin-bottom:6px;">⚡ 전원 근처 파이프부터 맞추면 연결 상태를 바로 확인할 수 있어요</li>
+    </ul>
+  </div>
+
+  <!-- 스토리 -->
+  <div style="background:#f0f4ff;border-radius:12px;padding:24px;margin-bottom:20px;">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 12px;color:#1e3a5f;">📖 게임 스토리</h3>
+    <p style="font-size:14px;color:#555;margin:0 0 12px;">
+      어느 날 마을의 전기가 모두 나가 버렸어요. 집도, 학교도, 병원도 모두 깜깜해졌지요.
+      여러분이 파이프를 연결해서 마을에 다시 빛을 되찾아 주세요!
+    </p>
+    <div style="font-size:13px;color:#666;">
+      🏠 5레벨 — 첫 번째 집에 불이 들어왔어요!<br>
+      🏫 10레벨 — 학교도 환해졌어요!<br>
+      🏥 15레벨 — 병원에 전기가 통했어요!<br>
+      🏞️ 20레벨 — 공원 가로등이 켜졌어요!<br>
+      🌃 25레벨 — 마을 전체가 밝아지고 있어요!<br>
+      🎆 30레벨 — 마을에 다시 빛이 돌아왔습니다!
+    </div>
+  </div>
+
+  <!-- 업적 -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:24px;margin-bottom:20px;">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 12px;color:#1a1a2e;">🏆 도전! 업적</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">🌟 <b>첫 번째 불</b><br><span style="color:#999;">첫 레벨 클리어</span></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">💨 <b>번개같이</b><br><span style="color:#999;">10초 안에 클리어</span></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">🎯 <b>완벽한 배선</b><br><span style="color:#999;">별 3개 획득</span></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">🔥 <b>연속 클리어</b><br><span style="color:#999;">5레벨 연속 클리어</span></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">🧠 <b>파이프 마스터</b><br><span style="color:#999;">15레벨 클리어</span></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">👑 <b>전기왕</b><br><span style="color:#999;">30레벨 모두 클리어</span></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">💡 <b>밝은 세상</b><br><span style="color:#999;">전구 총 50개 켜기</span></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px;">🚫 <b>노 힌트</b><br><span style="color:#999;">힌트 없이 10레벨</span></div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div style="text-align:center;padding:16px 0 32px;font-size:12px;color:#bbb;">
+    💡 불을 켜라! — PC, 모바일 모두 플레이 가능
+  </div>
+
 </div>

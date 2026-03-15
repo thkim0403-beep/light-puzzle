@@ -76,9 +76,7 @@ export default function Board({ board, onRotate, clearAnimating }: BoardProps) {
               onClick={() => onRotate(r, c)}
               onRightClick={(e) => {
                 e.preventDefault();
-                if (tile.type === 'bidirectional') {
-                  onRotate(r, c, true);
-                }
+                onRotate(r, c, true);
               }}
               clearAnimating={clearAnimating}
             />
